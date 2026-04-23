@@ -1,0 +1,77 @@
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+    tags:
+      - '*'
+  workflow_dispatch:
+
+name: Format, Check, Lint, Test
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  rustfmt:
+    runs-on: ubuntu-latest
+    name: Format
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install latest stable toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+          components: rustfmt
+
+      - name: Rustfmt
+        run: cargo fmt --all -- --check
+
+  check-lint-test:
+    needs: [rustfmt]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: "all features"
+            cargo-opts: "--all-features"
+            run-unit-tests: true
+          - name: "default features"
+            cargo-opts: ""
+            run-unit-tests: true
+          - name: "no default features"
+            cargo-opts: "--no-default-features"
+            # Unit tests require `alloc`
+            run-unit-tests: false
+          - name: "alloc"
+            cargo-opts: "--no-default-features --features 'alloc'"
+            run-unit-tests: true
+          - name: "std"
+            cargo-opts: "--no-default-features --features 'std'"
+            run-unit-tests: true
+    name: Check, Lint, Test ((${{ matrix.name }}))
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install latest stable toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+          components: rustfmt, clippy
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2.5.1
+        with:
+          shared-key: x86_64-unknown-linux-gnu
+      
+      - name: Cargo check
+        run: cargo check --all-targets ${{ matrix.cargo-opts }}
+      
+      - name: Clippy
+        run: cargo clippy --all-targets ${{ matrix.cargo-opts }}
+
+      - name: Unit tests
+        if: matrix.run-unit-tests == true
+        run: cargo test --all-targets ${{ matrix.cargo-opts }}
