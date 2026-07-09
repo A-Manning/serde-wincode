@@ -20,7 +20,7 @@ pub use {de::Deserializer, ser::Serializer};
 
 /// Wrapper struct that impls [`wincode::SchemaRead`] and
 /// [`wincode::SchemaWrite`] for types that impl [`serde::Deserialize`] and
-// [`serde::Serialize`], respectively.
+/// [`serde::Serialize`], respectively.
 #[repr(transparent)]
 pub struct SerdeCompat<T> {
     _marker: PhantomData<T>,
