@@ -16,7 +16,7 @@ extern crate alloc;
 mod de;
 mod ser;
 
-pub use {de::Deserializer, ser::Serializer};
+pub use {de::Deserializer, ser::Serializer, wincode};
 
 /// Wrapper struct that impls [`wincode::SchemaRead`] and
 /// [`wincode::SchemaWrite`] for types that impl [`serde::Deserialize`] and
